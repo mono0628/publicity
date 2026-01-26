@@ -1,9 +1,8 @@
 {
     "videos":[
-        "video1.mp4","video2.mp4","video3.mp4","video4.mp4"
+        {"src": "video1.mp4", "duration": 10},
+        {"src": "video2.mp4", "duration": 10},
+        {"src": "video3.mp4", "duration": 30},
+        {"src": "video4.mp4", "duration": 5}
     ]
-
 }
-
-
-
