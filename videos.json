@@ -1,8 +1,9 @@
 {
     "videos":[
-        {"src": "video1.mp4", "duration": 8},
-        {"src": "video2.mp4", "duration": 5},
-        {"src": "video3.mp4", "duration": 10},
-        {"src": "video4.mp4", "duration": 30}
+        {"type":"video","src": "video1.mp4", "duration": 8},
+        {"type":"video","src": "video2.mp4", "duration": 5},
+        {"type":"video","src": "video3.mp4", "duration": 10},
+        {"type":"imagen","src": "space.webp", "duration": 10},
+        {"type":"video","src": "video4.mp4", "duration": 30}
     ]
 }
