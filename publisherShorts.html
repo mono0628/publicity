@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Publicidad en Loop</title>
+  <style>
+    html, body { margin:0; height:100%; background:black; }
+    video { width:100%; height:100%; object-fit:cover; }
+  </style>
+</head>
+<body>
+  <video id="player" autoplay muted></video>
+
+  <script>
+    const jsonURL = "https://drive.google.com/file/d/1iKVLMqSdxVlnbXGmv5-KP7zwZH0ktwWa/view?usp=drive_link";
+
+    let videos = [];
+    let index = 0;
+    const player = document.getElementById("player");
+
+    // Cargar lista de videos desde JSON
+    fetch(jsonURL)
+      .then(response => response.json())
+      .then(data => {
+        videos = data.videos;
+        player.src = videos[index];
+      });
+
+    // Función para pasar al siguiente video
+    player.addEventListener("ended", () => {
+      index = (index + 1) % videos.length;
+      player.src = videos[index];
+      player.play();
+    });
+  </script>
+</body>
+</html>
