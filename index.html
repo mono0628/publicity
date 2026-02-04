@@ -4,44 +4,91 @@
   <meta charset="UTF-8">
   <title>SpaceCocktails</title>
   <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background: black;
-    overflow: hidden; /* evita scroll */
-  }
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-  video {
-    position: absolute;
-    /*top: 50%;
-    left: 50%;*/
-    width: 100%; /* altura de la pantalla como ancho del video */
-    height: 100%; /* ancho de la pantalla como altura del video */
-    /*transform: rotate(90deg) translate(-50%, -50%);*/
-    transform-origin: center center;
-    object-fit: cover
-  }
-  #custom-controls {
-  position: absolute;     /* sobre el video */
-  bottom: 20px;           /* a 20px del borde inferior */
-  right: 20px;            /* a 20px del borde derecho */
-  z-index: 999;           /* encima del video */
-}
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+    }
 
-#fullscreenButton {
-  padding: 10px 20px;
-  font-size: 18px;
-  background: rgba(255, 255, 255, 0.8); /* semitransparente */
-  color: black;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-</style>
+    /* Contenedor principal */
+    #stage {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 100vw;
+      height: 100vh;
+      transform: translate(-50%, -50%);
+      background: black;
+    }
+
+    /* Wrapper para rotar contenido */
+    #wrapper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform-origin: center center;
+    }
+
+    /* Contenido (video/imagen) */
+    #wrapper video,
+    #wrapper img {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      object-fit: cover;
+    }
+
+    /* Orientación horizontal */
+    #stage.horizontal #wrapper video,
+    #stage.horizontal #wrapper img {
+      width: 100vw;
+      height: 100vh;
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    /* Orientación vertical */
+    #stage.vertical #wrapper video,
+    #stage.vertical #wrapper img {
+      width: 100vh;  /* invertimos ancho y alto */
+      height: 100vw;
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+
+    /* Controles */
+    #custom-controls {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 999;
+    }
+
+    #fullscreenButton {
+      padding: 10px 20px;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.8);
+      color: black;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <video id="player" autoplay muted poster="imagen.png"></video>
+  <div id="stage">
+    <div id="wrapper">
+      <video id="player" autoplay muted poster="space.png"></video>
+      <img id="imageOverlay" style="display:none;">
+    </div>
+  </div>
+
   <div id="custom-controls">
     <button id="fullscreenButton">FullScreen</button>
   </div>  
@@ -49,55 +96,98 @@
   <script>
     const jsonURL = "https://raw.githubusercontent.com/mono0628/publicity/refs/heads/main/videos.json";
 
-    let videos = [];
+    let mediaList = [];
     let index = 0;
     const player = document.getElementById("player");
-    const fullscreenButton = document.getElementById('fullscreenButton')
+    const stage = document.getElementById("stage");
+    const wrapper = document.getElementById("wrapper");
+    const imageOverlay = document.getElementById("imageOverlay");
+    const fullscreenButton = document.getElementById('fullscreenButton');
 
     fullscreenButton.addEventListener('click', () => {
       if(!document.fullscreenElement){
-        if(player.requestFullscreen){
-          player.requestFullscreen();
-        }else if(player.webkitRequestFullscreen){
-          player.webkitRequestFullscreen();
-        }
-      }else {
-        if(document.exitFullscreen){
-          document.exitFullscreen();
-        }else if(player.webkitExitFullscreen){
-          document.webkitExitFullscreen();
-        }
+        stage.requestFullscreen?.() || stage.webkitRequestFullscreen?.();
+      } else {
+        document.exitFullscreen?.() || stage.webkitExitFullscreen?.();
       }
-    })
+    });
 
-    // Cargar lista de videos desde JSON
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement) {
+        hideControls();
+        player.controls = false;
+      } else {
+        showControls();
+      }
+    });
+
     fetch(jsonURL)
-      .then(response => response.json())
+      .then(res => res.json())
       .then(data => {
-        videos = data.videos;
-        //player.src = videos[index];
+        mediaList = data.videos;
         playVideo(index);
       });
 
-    // Función para pasar al siguiente video
-    /*player.addEventListener("ended", () => {
-      index = (index + 1) % videos.length;
-      player.src = videos[index];
-      player.play();
-    });*/
     let timer;
 
-    function playVideo(i){
-      const video = videos[i];
-      player.src = video.src;
-      player.play();
+    function playVideo(i) {
+      const item = mediaList[i];
+
+      // Actualizar clase según orientación
+      stage.classList.remove("vertical", "horizontal");
+      stage.classList.add(item.orientation === "vertical" ? "vertical" : "horizontal");
+
+      resizeVideo();
 
       if(timer) clearTimeout(timer);
 
+      if(item.type === "video") {
+        player.style.display = "block";
+        imageOverlay.style.display = "none";
+        player.src = item.src;
+        player.play();
+      } else if(item.type === "image") {
+        player.pause();
+        player.style.display = "none";
+        imageOverlay.src = item.src;
+        imageOverlay.style.display = "block";
+      }
+
       timer = setTimeout(() => {
-        index = (index + 1) % videos.length;
+        index = (index + 1) % mediaList.length;
         playVideo(index);
-      },video.duration * 1000);
+      }, item.duration * 1000);
+    }
+
+    function resizeVideo() {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      if(stage.classList.contains('vertical')) {
+        // Vertical: ancho=alto viewport, alto=ancho viewport
+        player.style.width = `${vh}px`;
+        player.style.height = `${vw}px`;
+        imageOverlay.style.width = `${vh}px`;
+        imageOverlay.style.height = `${vw}px`;
+      } else {
+        player.style.width = `${vw}px`;
+        player.style.height = `${vh}px`;
+        imageOverlay.style.width = `${vw}px`;
+        imageOverlay.style.height = `${vh}px`;
+      }
+    }
+
+    window.addEventListener('resize', resizeVideo);
+
+    function hideControls() {
+      const controls = document.getElementById('custom-controls');
+      controls.style.transition = 'opacity 0.5s';
+      controls.style.opacity = '0';
+    }
+
+    function showControls() {
+      const controls = document.getElementById('custom-controls');
+      controls.style.opacity = '1';
     }
   </script>
 </body>
