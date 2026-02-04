@@ -1,11 +1,10 @@
 {
     "videos":[
-        {"type":"video","src": "video1.mp4", "duration": 8},
-        {"type":"video","src": "video2.mp4", "duration": 5},
-        {"type":"video","src": "video3.mp4", "duration": 10},
+        {"type":"video","src": "space1.mp4", "duration": 18},
         {"type":"image","src": "space.png", "duration": 10},
-        {"type":"video","src": "video4.mp4", "duration": 30}
+        
     ]
 
 }
+
 
